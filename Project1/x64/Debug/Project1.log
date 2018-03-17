@@ -1,4 +1,6 @@
 ﻿  Source.cpp
-d:\programming\programacion juegos en redes\taller 4 - chat tcp - cliente_servidor\taller 4\project1\source.cpp(101): warning C4244: 'argument': conversion from 'float' to 'sf::Int32', possible loss of data
-d:\programming\programacion juegos en redes\taller 4 - chat tcp - cliente_servidor\taller 4\project1\source.cpp(242): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
-  Project1.vcxproj -> D:\PROGRAMMING\Programacion juegos en redes\Taller 4 - Chat TCP - Cliente_Servidor\Taller 4\x64\Debug\Client.exe
+c:\hubgeneral\tcp\tcp-aa2_tcp-\project1\source.cpp(102): warning C4244: 'argumento': conversión de 'float' a 'sf::Int32'; posible pérdida de datos
+c:\hubgeneral\tcp\tcp-aa2_tcp-\project1\source.cpp(243): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
+  Weapons.cpp
+  Generando código...
+  Project1.vcxproj -> C:\HubGeneral\TCP\TCP-AA2_TCP-\x64\Debug\Client.exe
