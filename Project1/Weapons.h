@@ -8,5 +8,6 @@ class Weapons
 		int range;
 		string name;
 		Weapons(string name,int range, int dice);
+		Weapons();
 		
 };

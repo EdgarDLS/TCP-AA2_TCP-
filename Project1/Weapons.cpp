@@ -7,3 +7,8 @@ Weapons::Weapons(string _name, int _dice, int _range) {
 	range = _range;
 	damage = _dice;
 }
+Weapons::Weapons() {
+	name = "Hand";
+	range = 1;
+	damage = 1;
+}

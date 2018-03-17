@@ -99,7 +99,7 @@ int main()
 
 	std::string ip;
 	unsigned short port;
-	int peers;          // Also used for text color to write the message with one color or another.
+	int peers;
 
 	sf::Socket::Status status = socket.connect("localhost", 50000, sf::milliseconds(15.f));
 
@@ -162,7 +162,7 @@ int main()
 
 	std::cout << "Todos los clientes se han conectado" << std::endl;
 	aMensajes.push_back("Todos los clientes estan listos");
-	messageColor.push_back(4);          // Add a value to the color vector. In this case will be white, which will be the system color value.
+	messageColor.push_back(4);
 	std::cout << "Peer numero: " << peers << std::endl;
 
 	// PARTE GRAFICA
