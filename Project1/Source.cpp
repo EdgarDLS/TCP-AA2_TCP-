@@ -17,23 +17,23 @@ sf::Color CheckTextColor(int peerId)
 
 	switch (peerId)
 	{
-	// Blue
+		// Blue
 	case 0:
 		newColor = sf::Color(0, 206, 209);
 		break;
-	// Green
+		// Green
 	case 1:
 		newColor = sf::Color(0, 160, 0);
 		break;
-	// Yellow
+		// Yellow
 	case 2:
 		newColor = sf::Color(230, 230, 0);
 		break;
-	// Orange
+		// Orange
 	case 3:
 		newColor = sf::Color(255, 180, 0);
 		break;
-	// White
+		// White
 	case 4:
 		newColor = sf::Color(255, 255, 255);
 		break;
@@ -57,9 +57,9 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 	while (socketSelector.wait())
 	{
-		for (int i = 0; i < peers.size(); i++) 
+		for (int i = 0; i < peers.size(); i++)
 		{
-			if (socketSelector.isReady(*peers[i])) 
+			if (socketSelector.isReady(*peers[i]))
 			{
 				status = peers[i]->receive(packet);
 				packet >> text >> peerId;
@@ -69,8 +69,11 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					socketSelector.remove(*peers[i]);
 					peers[i]->disconnect();
 					peers.erase(peers.begin() + i);
+
+					aMsjs->push_back("Se ha desconectado un jugador");
+					msgColor->push_back(4);
 				}
-				else 
+				else
 				{
 					aMsjs->push_back(text);
 					msgColor->push_back(peerId);
@@ -96,7 +99,7 @@ int main()
 
 	std::string ip;
 	unsigned short port;
-	int peers;			// Also used for text color to write the message with one color or another.
+	int peers;          // Also used for text color to write the message with one color or another.
 
 	sf::Socket::Status status = socket.connect("localhost", 50000, sf::milliseconds(15.f));
 
@@ -118,17 +121,17 @@ int main()
 		{
 			// IP and Port
 			packet >> ip >> port;
-			
+
 
 			sf::TcpSocket* aux = new sf::TcpSocket();
 			status = aux->connect(ip, port);
 
-			if (status != sf::Socket::Done) 
+			if (status != sf::Socket::Done)
 			{
 				std::cout << "Error al establecer conexion\n";
 				exit(0);
 			}
-			else 
+			else
 			{
 				std::cout << "Conectado con >> IP: " << ip << " | PORT: " << port << std::endl;
 				peersVector.push_back(aux);
@@ -141,7 +144,7 @@ int main()
 		socket.disconnect();
 
 		listener.listen(newPort);
-		
+
 		sf::TcpListener::Status peerStatus;
 		while (peersVector.size() < 3)
 		{
@@ -159,7 +162,7 @@ int main()
 
 	std::cout << "Todos los clientes se han conectado" << std::endl;
 	aMensajes.push_back("Todos los clientes estan listos");
-	messageColor.push_back(4);			// Add a value to the color vector. In this case will be white, which will be the system color value.
+	messageColor.push_back(4);          // Add a value to the color vector. In this case will be white, which will be the system color value.
 	std::cout << "Peer numero: " << peers << std::endl;
 
 	// PARTE GRAFICA
@@ -203,6 +206,7 @@ int main()
 			{
 			case sf::Event::Closed:
 				window.close();
+				exit(0);
 				break;
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Escape)
@@ -220,7 +224,11 @@ int main()
 						peersVector[i]->send(packet);
 
 					if (aMensajes.size() > 25)
+					{
+						mut.lock();
 						aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+						mut.unlock();
+					}
 
 					mensaje = ">";
 				}
@@ -251,4 +259,6 @@ int main()
 		window.display();
 		window.clear();
 	}
+
+	sockSelecThread.join();
 }
