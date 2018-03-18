@@ -15,11 +15,13 @@ int gClass;
 int gTeam;
 int gX;
 int gY;
+int gDmg;
 int globalTurn=30;
 bool giveNewPlayer = false;
 bool myMovement = true;
-bool myAtack = false;
+bool myAtack = true;
 bool giveMovement = false;
+bool giveAttack = false;
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
@@ -201,6 +203,29 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 					std::cout << "MOVIMIENTO - Jugador " << i << " se ha movido ";
 					text = "MOVIMIENTO - Jugador " + to_string(i) + " se ha movido";
+					peerId = 4;
+				}
+				else if (command == "ATTACK")
+				{
+					int aId;
+					int aDmg;
+
+
+					packet >> aId;
+					packet >> aDmg;
+					
+
+
+
+					gId = aId;
+					gDmg = aDmg;
+					
+					giveAttack = true;
+
+
+
+					std::cout << "ATTACK - Jugador " << i << " ha atacado ";
+					text = "ATAQUE - Jugador " + to_string(i) + " ha atacado a Jugador " + to_string(aId);
 					peerId = 4;
 				}
 				else if (command == "TURN")
@@ -406,34 +431,52 @@ int main()
 								break;
 							}
 						}
-						myPlayer.move(x, y);
+						if (myPlayer.move(x, y)==true) {
+							sf::Packet packet;
+							packet << (sf::String)"MOVEMENT";
+							packet << peers << x << y;
 
-						sf::Packet packet;
-						packet << (sf::String)"MOVEMENT";
-						packet << peers << x << y;
+							mensaje = "MOVIMIENTO - Me he movido";
 
-						mensaje = "MOVIMIENTO - Me he movido";
+							aMensajes.push_back(mensaje);
+							messageColor.push_back(4);
 
-						aMensajes.push_back(mensaje);
-						messageColor.push_back(4);
+							// Send the message to the rest of the clients.
+							for (int i = 0; i < peersVector.size(); i++)
+							{
+								std::cout << "MOVEMENT | SENDING" << std::endl;
+								peersVector[i]->send(packet);
+							}
+							if (aMensajes.size() > 7)
+							{
+								mut.lock();
+								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+								mut.unlock();
+							}
 
-						// Send the message to the rest of the clients.
-						for (int i = 0; i < peersVector.size(); i++)
-						{
-							std::cout << "MOVEMENT | SENDING" << std::endl;
-							peersVector[i]->send(packet);
+							mensaje = ">";
+
+							myMovement = false;
 						}
-						if (aMensajes.size() > 7)
-						{
-							mut.lock();
-							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-							mut.unlock();
+						else
+						{						
+							mensaje = "MOVIMIENTO - Fuera de rango";
+
+							aMensajes.push_back(mensaje);
+							messageColor.push_back(4);
+
+							if (aMensajes.size() > 7)
+							{
+								mut.lock();
+								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+								mut.unlock();
+							}
+
+							mensaje = ">";
 						}
-
-						mensaje = ">";
-
-						myMovement = false;
+					
 					}
 				}
 			case sf::Event::KeyPressed:
@@ -514,7 +557,58 @@ int main()
 							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
 							mut.unlock();
 						}
+						int enemy = 1;
+						int dmg;
+						if (1)
+						{
+							dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemy]);
+						}
+						else if (2)
+						{
+							dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemy]);
+						}
+						if (dmg == 1000) 
+						{
+							mensaje = "ATAQUE - Fuera de rango";
 
+							aMensajes.push_back(mensaje);
+							messageColor.push_back(4);
+
+							if (aMensajes.size() > 7)
+							{
+								mut.lock();
+								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+								mut.unlock();
+							}
+						}
+						else
+						{
+							for (int n = 0; n < aPlayers.size(); n++)
+							{
+								if (aPlayers[n].ID == enemy)
+									aPlayers[n].clase.vida = aPlayers[n].clase.vida - gDmg;
+							}							
+							//enviamos el paquete con el daño y el id del jugador;
+							myAtack = false;
+							//comprobar victoria
+							bool team0Dead = true;
+							bool team1Dead = true;
+							for (int n = 0; n < aPlayers.size(); n++)
+							{
+								if (aPlayers[n].team == 0 && aPlayers[n].clase.vida > 0) {
+									team0Dead = false;
+								}
+								if (aPlayers[n].team == 1 && aPlayers[n].clase.vida > 0) {
+									team1Dead = false;
+								}
+							}
+							if (team0Dead) {
+								//send team 1 win
+							}
+							if (team1Dead) {
+								//send team 0 win;
+							}
+						}
 						mensaje = ">";
 					}
 				}
@@ -553,6 +647,15 @@ int main()
 		}
 		if (myState == Playing) 
 		{
+			if (giveAttack) {
+				std::cout << " Send ATTACK " << std::endl;
+				for (int n = 0; n < aPlayers.size(); n++)
+				{
+					if (aPlayers[n].ID == gId)
+						aPlayers[n].clase.vida= aPlayers[n].clase.vida-gDmg;
+				}
+				giveAttack = false;
+			}
 			if (giveMovement) 
 			{
 				std::cout << " Send MOVEMENT " << std::endl;
@@ -565,8 +668,7 @@ int main()
 
 				giveMovement = false;
 			}
-
-			if (!myMovement && !myAtack && globalTurn == peers)
+			if (!myMovement && !myAtack && globalTurn == peers || myPlayer.clase.vida<=0)
 			{
 				globalTurn = (globalTurn + 1) % 4;
 
@@ -593,6 +695,7 @@ int main()
 
 				mensaje = ">";
 
+				myAtack = true;
 				myMovement = true;
 			}
 		}
@@ -623,6 +726,52 @@ int main()
 				std::string chatting = std::to_string(c + 1) + " - " + differentClasses[c];
 				classesText.setFillColor(classesColor[c]);
 				classesText.setPosition(sf::Vector2f(650, (50 * c) + 60));
+				classesText.setString(chatting);
+				window.draw(classesText);
+			}
+		}
+		if (myState == Playing)
+		{
+
+			std::string miTexto = " I'm Player: " + std::to_string(myPlayer.ID) + " - " + myPlayer.name + " - My Team " + std::to_string(myPlayer.team);
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 50));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+			miTexto = " /1.Arma Principal: " + myPlayer.clase.arma1.name + " - Daño:  " + to_string(myPlayer.clase.arma1.damage) + " - Rango " + std::to_string(myPlayer.clase.arma1.range);
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 70));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+			miTexto = " /2.Arma Secundaria: " + myPlayer.clase.arma2.name + " - Daño:  " + to_string(myPlayer.clase.arma2.damage) + " - Rango " + std::to_string(myPlayer.clase.arma2.range);
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 90));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+			miTexto = " /end Acabar turno";
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 110));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+
+			miTexto = "Ejemplo de ataque con arma";
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 210));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+			miTexto = "principal a jugador 3: /1_3";
+			classesText.setFillColor(CheckTextColor(peers));
+			classesText.setPosition(sf::Vector2f(610, 230));
+			classesText.setString(miTexto);
+			window.draw(classesText);
+
+
+
+			for (int c = 0; c < aPlayers.size(); c++)
+			{
+				std::string chatting = "Player: " + std::to_string(aPlayers[c].ID ) + " - " + aPlayers[c].name + " - Team " + std::to_string(aPlayers[c].team);
+				classesText.setFillColor(CheckTextColor(aPlayers[c].ID));
+				classesText.setPosition(sf::Vector2f(610, (20 * c) + 450));
 				classesText.setString(chatting);
 				window.draw(classesText);
 			}

@@ -100,15 +100,23 @@ Classes Player::getClase(int number)
 
 int Player::attack1(Classes _clase , Player _enemy)
 {
+	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)) / 40);
 	int dmg;
-	int tocar = _clase.damage +( rand() % 19 )+ 1;
-
-	if (tocar >= _enemy.clase.CA) 
+	if (distancia < clase.arma1.range) 
 	{
-		dmg= _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
+		int tocar = _clase.damage + (rand() % 19) + 1;
+
+		if (tocar >= _enemy.clase.CA)
+		{
+			dmg = _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
+		}
+		else
+			dmg = 0;
 	}
 	else
-		dmg = 0;
+	{
+		dmg = 1000;
+	}
 
 	return dmg;
 }
@@ -137,10 +145,13 @@ void Player::setPosition(sf::Vector2f _position, int _x, int _y) {
 	y = _y;
 }
 
-void Player::move(int x, int y) {
+bool Player::move(int x, int y) {
+	bool movement = false;
 	int distancia =(int) (sqrt(pow(x-this->x, 2) + pow(y-this->y, 2))/40);
 	if (distancia < this->clase.movement) {
 		sf::Vector2f newPosition(x, y);
 		setPosition(newPosition,x,y);
+		movement = true;
 	}
+	return movement;
 }

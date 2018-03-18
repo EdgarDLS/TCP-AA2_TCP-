@@ -32,5 +32,5 @@ public:
 	sf::Vector2f getPosiotion();
 	void setPosition(sf::Vector2f position,int x, int y);
 
-	void move(int x, int y);
+	bool move(int x, int y);
 };
