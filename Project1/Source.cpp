@@ -8,7 +8,7 @@
 #include <mutex>
 #include"Player.h"
 
-string gname;
+string gName;
 int gTurn;
 int gId;
 int gClass;
@@ -152,45 +152,26 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					int aX;
 					int aY;
 
-				//	std::cout << "1" << std::endl;
 					packet >> aName;
-					//std::cout << aName << std::endl;
-					//std::cout << "2" << std::endl;
 					packet >> aTurn;
-					//std::cout << aTurn << std::endl;
-				//	std::cout << "3" << std::endl;
 					packet >> aId;
-					//std::cout << aId << std::endl;
-					//std::cout << "4" << std::endl;
 					packet >> aClass;
-					//std::cout << aClass << std::endl;
-					//std::cout << "5" << std::endl;
 					packet >> aTeam;
-					//std::cout << aTeam << std::endl;
-					//std::cout << "6" << std::endl;
 					packet >> aX;
-					//std::cout << aX << std::endl;
-					//std::cout << "7" << std::endl;
 					packet >> aY;
-					//std::cout << aY << std::endl;
-					//std::cout << "MI" << std::endl;
 
-					gname = aName;
+
+					gName = aName;
 					gTurn=aTurn;
-					//std::cout << "8" << std::endl;
 					gId= aId;
 					gClass= aClass;
 					gTeam= aTeam;
 					gX= aX;
 					gY= aY;
 					giveNewPlayer = true;
-					//std::cout << "9" << std::endl;
 
-					
-
-					//std::cout << "Jugador asignado" << std::endl;
-					//text = "El jugador " + newPlayer.name + " ha escogido la clase " + newPlayer.clase.name;
-					text = "TEST";
+					text = "El jugador " + aName + " ha escogido la clase " + differentClasses[aClass -1];
+					peerId = 4;
 				}
 				else
 				{
@@ -384,6 +365,27 @@ int main()
 							}
 						}
 						myPlayer.move(x, y);
+
+						sf::Packet packet;
+						packet << "MOVEMENT";
+						packet << x << y;
+
+						aMensajes.push_back(mensaje);
+						messageColor.push_back(peers);
+
+						// Send the message to the rest of the clients.
+						for (int i = 0; i < peersVector.size(); i++)
+							peersVector[i]->send(packet);
+
+						if (aMensajes.size() > 7)
+						{
+							mut.lock();
+							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+							mut.unlock();
+						}
+
+						mensaje = ">";
 					}
 				}
 			case sf::Event::KeyPressed:
@@ -480,21 +482,18 @@ int main()
 		}
 		//separator
 		if (myState == Ready || myState == CharacterCreation) {
-			cout << aPlayers.size() << std::endl;
 			if (giveNewPlayer)
 			{
-				aPlayers.push_back(Player(gname, gTurn, gId, gClass, gTeam, gX, gY));
+				aPlayers.push_back(Player(gName, gTurn, gId, gClass, gTeam, gX, gY));
 				giveNewPlayer = false;
 			}
-			if (aPlayers.size() == 4) {
+			if (aPlayers.size() == 4) 
+			{
 				myState = Playing;
 			}
 			
 		}
-		if (myState == Playing) {
-			for (int n = 0; n < 2; n++)
-				cout << aPlayers[n].name << std::endl;
-		}
+
 		window.draw(separator);
 		window.draw(chatRect);
 

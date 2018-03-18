@@ -9,25 +9,15 @@ Player Player::setPlayer(string _name, int _turno, int _id, int _clase, int _equ
 
 Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, int _x, int _y)
 {
-	std::cout << "1" << std::endl;
 	sf::Vector2f newPosition(_x, _y);
-	std::cout << "1" << std::endl;
 	setPosition(newPosition, _x, _y);
-	std::cout << "1" << std::endl;
 	name = _name;
-	std::cout << "1" << std::endl;
 	turno = _turno;
-	std::cout << "1" << std::endl;
 	ID = _id;
-	std::cout << "1" << std::endl;
 	clase = getClase(_clase);
-	std::cout << "1" << std::endl;
 	team = _equipo;
-	std::cout << "1" << std::endl;
 	playerTexture.loadFromFile(myTexture(_clase));
-	std::cout << "1" << std::endl;
 	playerSprite.setTexture(playerTexture);
-	std::cout << "1" << std::endl;
 }
 
 Player::Player()
