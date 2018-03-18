@@ -180,14 +180,9 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 				else if (command == "MOVEMENT")
 				{
-					//std::cout << "PLAYER | NEW" << std::endl;
-
-					
 					int aId;
 					int aX;
 					int aY;
-
-					
 
 					
 					packet >> aId;
@@ -202,12 +197,22 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					gY = aY;
 					giveMovement = true;
 
-					text = "El jugador " + to_string(aId) + " se ha movido ";
+					
+
+					std::cout << "MOVIMIENTO - Jugador " << i << " se ha movido ";
+					text = "MOVIMIENTO - Jugador " + to_string(i) + " se ha movido";
 					peerId = 4;
+				}
+				else if (command == "TURN")
+				{
+					packet >> globalTurn;
+
+					std::cout << "El Jugador  " << i << " ha acabado el turno ";
+					text = "Turno del jugador " + to_string(i) + " ha acabado";
 				}
 				else
 				{
-					//std::cout << "MESSAGE | NEW" << std::endl;
+					std::cout << "MESSAGE | NEW" << std::endl;
 					packet >> text >> peerId;
 				}
 				
@@ -404,16 +409,20 @@ int main()
 						myPlayer.move(x, y);
 
 						sf::Packet packet;
-						packet << "MOVEMENT";
+						packet << (sf::String)"MOVEMENT";
 						packet << peers << x << y;
 
+						mensaje = "MOVIMIENTO - Me he movido";
+
 						aMensajes.push_back(mensaje);
-						messageColor.push_back(peers);
+						messageColor.push_back(4);
 
 						// Send the message to the rest of the clients.
 						for (int i = 0; i < peersVector.size(); i++)
+						{
+							std::cout << "MOVEMENT | SENDING" << std::endl;
 							peersVector[i]->send(packet);
-
+						}
 						if (aMensajes.size() > 7)
 						{
 							mut.lock();
@@ -423,24 +432,8 @@ int main()
 						}
 
 						mensaje = ">";
-						
 
-
-						
-						///////////////////
-						/*sf::Packet packet;
-
-						mensaje = ">";
-
-						packet << "MOVEMENT";
-						packet << x;
-						packet << y;
-						packet << myPlayer.ID;
-						
-
-						for (int i = 0; i < peersVector.size(); i++)
-							peersVector[i]->send(packet);*/
-						myMovement = true;
+						myMovement = false;
 					}
 				}
 			case sf::Event::KeyPressed:
@@ -451,8 +444,6 @@ int main()
 				{
 					if (myState == CharacterCreation)
 					{
-
-					
 						std::string classNumber = "0";
 						std::string playerName = "0";
 
@@ -506,7 +497,7 @@ int main()
 					else if (myState == Playing)
 					{
 						sf::Packet packet;
-						packet << "MESSAGE";
+						packet << (sf::String)"MESSAGE";
 						packet << mensaje << peers;
 
 						aMensajes.push_back(mensaje);
@@ -571,6 +562,38 @@ int main()
 					if (aPlayers[n].ID == gId)
 						aPlayers[n].move(gX, gY);
 				}
+
+				giveMovement = false;
+			}
+
+			if (!myMovement && !myAtack && globalTurn == peers)
+			{
+				globalTurn = (globalTurn + 1) % 4;
+
+				sf::Packet packet;
+				packet << (sf::String)"TURN";
+				packet << globalTurn;
+
+				mensaje = "Turno finalizado";
+
+				aMensajes.push_back(mensaje);
+				messageColor.push_back(4);
+
+				// Send the message to the rest of the clients.
+				for (int i = 0; i < peersVector.size(); i++)
+					peersVector[i]->send(packet);
+
+				if (aMensajes.size() > 7)
+				{
+					mut.lock();
+					aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+					//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+					mut.unlock();
+				}
+
+				mensaje = ">";
+
+				myMovement = true;
 			}
 		}
 
