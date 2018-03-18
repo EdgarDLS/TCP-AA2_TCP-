@@ -12,9 +12,41 @@
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
+std::string differentClasses[] = 
+{ 
+	"Paladin", 
+	"Barbarian", 
+	"Assasin", 
+	"Archer", 
+	"Shadowblade",
+	"Metamothp", 
+	"Monk", 
+	"Mage" 
+};
 
-#define MAX_MENSAJES 30
+sf::Color classesColor[] =
+{
+	sf::Color(255, 255, 255),
+	sf::Color(0, 160, 0),
+	sf::Color(255, 255, 255),
+	sf::Color(0, 160, 0),
+	sf::Color(255, 255, 255),
+	sf::Color(0, 160, 0),
+	sf::Color(255, 255, 255),
+	sf::Color(0, 160, 0)
+};
+
 std::mutex mut;
+
+enum PlayerState
+{
+	Waiting,
+	CharacterCreation,
+	Ready,
+	Playing
+};
+
+Player newPlayer;
 
 
 
@@ -49,12 +81,41 @@ sf::Color CheckTextColor(int peerId)
 	return newColor;
 }
 
-void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* msgColor, std::vector<sf::TcpSocket*> peers)
+std::string AssignPlayerName(int peerId)
+{
+	std::string name = "Name";
+
+	switch (peerId)
+	{
+		// Blue
+	case 0:
+		name = "AZUL";
+		break;
+		// Green
+	case 1:
+		name = "VERDE";
+		break;
+		// Yellow
+	case 2:
+		name = "AMARILLO";
+		break;
+		// Orange
+	case 3:
+		name = "NARANJA";
+		break;
+	}
+
+	return name;
+}
+
+void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* msgColor, std::vector<Player>* _aPlayers, std::vector<sf::TcpSocket*> peers)
 {
 	sf::SocketSelector socketSelector;
 	sf::Packet packet;
 	sf::Socket::Status status;
 	sf::String text;
+
+	sf::String command;
 
 	int peerId;
 
@@ -69,7 +130,61 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 			if (socketSelector.isReady(*peers[i]))
 			{
 				status = peers[i]->receive(packet);
-				packet >> text >> peerId;
+
+				packet >> command;
+
+				if (command == "PLAYER")
+				{
+					std::cout << "PLAYER | NEW" << std::endl;
+
+					std::string aName;
+					int aTurn;
+					int aId;
+					int aClass;
+					int aTeam;
+					int aX;
+					int aY;
+
+					std::cout << "1" << std::endl;
+					packet >> aName;
+					std::cout << aName << std::endl;
+					std::cout << "2" << std::endl;
+					packet >> aTurn;
+					std::cout << aTurn << std::endl;
+					std::cout << "3" << std::endl;
+					packet >> aId;
+					std::cout << aId << std::endl;
+					std::cout << "4" << std::endl;
+					packet >> aClass;
+					std::cout << aClass << std::endl;
+					std::cout << "5" << std::endl;
+					packet >> aTeam;
+					std::cout << aTeam << std::endl;
+					std::cout << "6" << std::endl;
+					packet >> aX;
+					std::cout << aX << std::endl;
+					std::cout << "7" << std::endl;
+					packet >> aY;
+					std::cout << aY << std::endl;
+					std::cout << "8" << std::endl;
+
+					newPlayer = Player(aName, aTurn, aId, aClass, aTeam, aX, aY);
+					//Player player1 = Player((string)"Albert", 1, 1, 4, 1, 200, 120);
+
+					std::cout << "9" << std::endl;
+
+					_aPlayers->push_back(newPlayer);
+
+					std::cout << "Jugador asignado" << std::endl;
+					//text = "El jugador " + newPlayer.name + " ha escogido la clase " + newPlayer.clase.name;
+					text = "TEST";
+				}
+				else
+				{
+					std::cout << "MESSAGE | NEW" << std::endl;
+					packet >> text >> peerId;
+				}
+				
 
 				if (status == sf::Socket::Status::Disconnected)
 				{
@@ -85,8 +200,9 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					aMsjs->push_back(text);
 					msgColor->push_back(peerId);
 
-					while (aMsjs->size() > 25)
+					while (aMsjs->size() > 7)
 						aMsjs->erase(aMsjs->begin() + i);
+						//msgColor->erase(msgColor->begin() + i);
 				}
 				break;
 			}
@@ -96,14 +212,15 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 int main()
 {
-	Player player1 = Player((string)"Albert", 1, 1, 4, 1, 200, 120);
-	Player player2 = Player((string)"Alberte", 1, 1, 6, 1, 320,80);
+	Player myPlayer;
+	PlayerState myState = Waiting;
 
 	std::vector<std::string> aMensajes;
 	std::vector<int> messageColor;
 
 	sf::TcpSocket socket;
 	std::vector<sf::TcpSocket*> peersVector;
+	std::vector<Player> aPlayers;
 	sf::TcpListener listener;
 	sf::Packet packet;
 
@@ -127,9 +244,6 @@ int main()
 		packet >> peers;
 		std::cout << "Peers actuales: " << peers << std::endl;
 		
-		
-		
-
 		for (int i = 0; i < peers; i++)
 		{
 			// IP and Port
@@ -161,7 +275,7 @@ int main()
 		sf::TcpListener::Status peerStatus;
 		while (peersVector.size() < 3)
 		{
-			std::cout << "While | Vector Size: " << peersVector.size() << std::endl;
+			// std::cout << "While | Vector Size: " << peersVector.size() << std::endl;
 			sf::TcpSocket* peerSocket = new sf::TcpSocket;
 			peerStatus = listener.accept(*peerSocket);
 
@@ -174,10 +288,13 @@ int main()
 	}
 
 	std::cout << "Todos los clientes se han conectado" << std::endl;
-	aMensajes.push_back("Todos los clientes estan listos");
+	aMensajes.push_back("Introduce el numero de la clase a jugar");
 	messageColor.push_back(4);
 	std::cout << "Peer numero: " << peers << std::endl;
 	
+	myState = CharacterCreation;
+	std::cout << "PLAYER STATE | Character creation" << std::endl;
+
 	// PARTE GRAFICA
 
 	sf::Vector2i screenDimensions(1000, 800);
@@ -195,17 +312,20 @@ int main()
 		std::cout << "Can't load the font file" << std::endl;
 	}
 
-	sf::String mensaje = " >";
+	sf::String mensaje = ">";
 
 	sf::Text chattingText(mensaje, font, 14);
 	chattingText.setFillColor(sf::Color(0, 160, 0));
 	chattingText.setStyle(sf::Text::Bold);
 
-
 	sf::Text text(mensaje, font, 14);
 	text.setFillColor(CheckTextColor(peers));
 	text.setStyle(sf::Text::Bold);
 	text.setPosition(0, 630);
+
+	sf::Text classesText(mensaje, font, 14);
+	classesText.setFillColor(sf::Color(255, 255, 255));
+	classesText.setStyle(sf::Text::Bold);
 
 	sf::RectangleShape separator(sf::Vector2f(800, 5));
 	separator.setFillColor(sf::Color(200, 200, 200, 255));
@@ -215,7 +335,7 @@ int main()
 	chatRect.setPosition(0, 650);
 
 	// Thread to receive packets
-	std::thread sockSelecThread(&thread_socket_selector, &aMensajes, &messageColor, peersVector);
+	std::thread sockSelecThread(&thread_socket_selector, &aMensajes, &messageColor, &aPlayers, peersVector);
 
 	while (window.isOpen())
 	{
@@ -247,7 +367,7 @@ int main()
 								break;
 							}
 						}
-						player1.move(x, y);
+						myPlayer.move(x, y);
 					}
 				}
 			case sf::Event::KeyPressed:
@@ -255,24 +375,82 @@ int main()
 					window.close();
 				else if (evento.key.code == sf::Keyboard::Return)
 				{
-					sf::Packet packet;
-					packet << mensaje << peers;
-
-					aMensajes.push_back(mensaje);
-					messageColor.push_back(peers);
-
-					// Send the message to the rest of the clients.
-					for (int i = 0; i < peersVector.size(); i++)
-						peersVector[i]->send(packet);
-
-					if (aMensajes.size() > 7)
+					if (myState == CharacterCreation)
 					{
-						mut.lock();
-						aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-						mut.unlock();
-					}
+						std::string classNumber = "0";
+						std::string playerName = "0";
 
-					mensaje = ">";
+						if (mensaje.find('>') != std::string::npos)
+							classNumber = (std::string)mensaje.substring(1, 1);
+						else
+							classNumber = (std::string)mensaje.substring(0, 1);
+
+
+						myPlayer = myPlayer.setPlayer(AssignPlayerName(peers), peers+1, peers, atoi(classNumber.c_str()), peers % 2, (peers + 1)* 100, (peers + 1) * 100);
+
+						mensaje = ">";
+
+						sf::Packet readyPacket;
+						readyPacket << (sf::String)"PLAYER";
+						readyPacket << myPlayer.name;
+						readyPacket << myPlayer.turno;
+						readyPacket << myPlayer.ID;
+						readyPacket << atoi(classNumber.c_str());
+						readyPacket << myPlayer.team;
+						readyPacket << myPlayer.x;
+						readyPacket << myPlayer.y;
+
+						for (int i = 0; i < peersVector.size(); i++)
+							peersVector[i]->send(readyPacket);
+
+						myState = Ready;
+					}
+					else if (myState == Ready)
+					{
+						sf::Packet packet;
+						packet << (sf::String)"MESSAGE";
+						packet << mensaje << peers;
+
+						aMensajes.push_back(mensaje);
+						messageColor.push_back(peers);
+
+						// Send the message to the rest of the clients.
+						for (int i = 0; i < peersVector.size(); i++)
+							peersVector[i]->send(packet);
+
+						if (aMensajes.size() > 7)
+						{
+							mut.lock();
+							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+							mut.unlock();
+						}
+
+						mensaje = ">";
+					}
+					else if (myState == Playing)
+					{
+						sf::Packet packet;
+						packet << "MESSAGE";
+						packet << mensaje << peers;
+
+						aMensajes.push_back(mensaje);
+						messageColor.push_back(peers);
+
+						// Send the message to the rest of the clients.
+						for (int i = 0; i < peersVector.size(); i++)
+							peersVector[i]->send(packet);
+
+						if (aMensajes.size() > 7)
+						{
+							mut.lock();
+							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+							mut.unlock();
+						}
+
+						mensaje = ">";
+					}
 				}
 				break;
 			case sf::Event::TextEntered:
@@ -286,6 +464,7 @@ int main()
 		//separator
 		window.draw(separator);
 		window.draw(chatRect);
+
 		for (size_t i = 0; i < aMensajes.size(); i++)
 		{
 			std::string chatting = aMensajes[i];
@@ -295,28 +474,33 @@ int main()
 			chattingText.move(10, 650);
 			window.draw(chattingText);
 		}
+
 		std::string mensaje_ = mensaje + "_";
 		text.setString(mensaje_);
 		//text.move(10, 630);
 		window.draw(text);
 
+		if (myState == CharacterCreation)
+		{
+			for (int c = 0; c < differentClasses->size() + 1; c++)
+			{
+				std::string chatting = std::to_string(c + 1) + " - " + differentClasses[c];
+				classesText.setFillColor(classesColor[c]);
+				classesText.setPosition(sf::Vector2f(650, (50 * c) + 60));
+				classesText.setString(chatting);
+				window.draw(classesText);
+			}
+		}
+		
+
 		//aqui van las imagenes
 		mapaSprite.setPosition(mapaPosition);
-		window.draw(mapaSprite);
-	
+		window.draw(mapaSprite);	
 
-		
-
-		player1.playerSprite.setScale(0.25f, 0.25f);
-		player1.playerSprite.setPosition(player1.position);
-		window.draw(player1.playerSprite);
-		player2.playerSprite.setScale(0.25f, 0.25f);
-		player2.playerSprite.setPosition(player2.position);
-		window.draw(player2.playerSprite);
-		
-		
-		
-		
+		myPlayer.playerSprite.setTexture(myPlayer.playerTexture);
+		myPlayer.playerSprite.setScale(0.25f, 0.25f);
+		myPlayer.playerSprite.setPosition(myPlayer.position);
+		window.draw(myPlayer.playerSprite);		
 
 		window.display();
 

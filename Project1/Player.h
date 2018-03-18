@@ -10,7 +10,7 @@ class Player
 public:
 	int turno;
 	int ID;
-	int Team;
+	int team;
 	int x;
 	int y;
 	string name;
@@ -19,7 +19,9 @@ public:
 	sf::Sprite playerSprite;
 	sf::Texture playerTexture;
 
+	Player setPlayer(string name, int turno, int id, int clase, int equipo, int x, int y);
 	Player(string name, int turno, int id, int clase, int equipo, int x, int y);
+	Player();
 	
 	Classes getClase(int Clase);
 	string myTexture(int number);
