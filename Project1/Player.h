@@ -12,6 +12,7 @@ public:
 	int ID;
 	int team;
 	int x;
+	int vida;
 	int y;
 	string name;
 	Classes clase;	
@@ -28,6 +29,7 @@ public:
 
 	int attack1(Classes clase,Player _enemy);
 	int attack2(Classes _clase, Player _enemy);
+	void setVida(int dmg);
 
 	sf::Vector2f getPosiotion();
 	void setPosition(sf::Vector2f position,int x, int y);

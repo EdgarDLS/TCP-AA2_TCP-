@@ -15,4 +15,6 @@ public:
 	Weapons arma2;
 	Classes(string name, int damage, int movement,int vida,int CA,  Weapons arma1, Weapons arma2);
 	Classes();
+	
+
 };

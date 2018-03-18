@@ -574,15 +574,23 @@ int main()
 								enemyId = atoi(values.c_str());
 							}
 
-							int dmg;
-
+							if (enemyId == myPlayer.ID) 
+								enemyId++;
+							
+							int dmg=6;
+							int theEnemy;
+							for (int n = 0; n < aPlayers.size() ; n++)
+							{
+								if (aPlayers[n].ID == enemyId)
+									theEnemy = n;
+							}
 							if (weaponSlot == 1)
 							{
-								dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemyId]);
+								dmg = myPlayer.attack1(myPlayer.clase, aPlayers[theEnemy]);
 							}
 							else if (weaponSlot == 2)
 							{
-								dmg = myPlayer.attack2(myPlayer.clase, aPlayers[enemyId]);
+								dmg = myPlayer.attack2(myPlayer.clase, aPlayers[theEnemy]);
 							}
 							if (dmg == 1000)
 							{
@@ -600,26 +608,16 @@ int main()
 							}
 							else
 							{
-								for (int n = 0; n < aPlayers.size(); n++)
-								{
-									if (aPlayers[n].ID == enemyId)
-									{
-										std::cout << "BEFORE | " << aPlayers[n].clase.vida << std::endl;
-										aPlayers[n].clase.vida = aPlayers[n].clase.vida - dmg;
-										std::cout << "AFTER | " << aPlayers[n].clase.vida << std::endl;
-									}
-										
+								
+								aPlayers[theEnemy].setVida(dmg);							
 
-									
-								}
 								//enviamos el paquete con el daño y el id del jugador;
 								packet << dmg;
 
 								// Send the message to the rest of the clients.
 								for (int i = 0; i < peersVector.size(); i++)
 									peersVector[i]->send(packet);
-
-
+								
 								aMensajes.push_back("ATAQUE realizado");
 								messageColor.push_back(peers);
 
@@ -638,10 +636,10 @@ int main()
 
 								for (int n = 0; n < aPlayers.size(); n++)
 								{
-									if (aPlayers[n].team == 0 && aPlayers[n].clase.vida > 0) {
+									if (aPlayers[n].team == 0 && aPlayers[n].vida > 0) {
 										team0Dead = false;
 									}
-									if (aPlayers[n].team == 1 && aPlayers[n].clase.vida > 0) {
+									if (aPlayers[n].team == 1 && aPlayers[n].vida > 0) {
 										team1Dead = false;
 									}
 								}
@@ -686,7 +684,7 @@ int main()
 				break;
 			}
 		}
-		//separator
+		
 		if (myState == CharacterCreation) 
 		{
 			if (giveNewPlayer)
@@ -714,11 +712,19 @@ int main()
 		{
 			if (giveAttack) {
 				std::cout << " Send ATTACK " << std::endl;
-				for (int n = 0; n < aPlayers.size(); n++)
+				if (gId = myPlayer.ID)
 				{
-					if (aPlayers[n].ID == gId)
-						aPlayers[n].clase.vida= aPlayers[n].clase.vida-gDmg;
+					myPlayer.setVida(gDmg);
 				}
+				else
+				{
+					for (int n = 0; n < aPlayers.size(); n++)
+					{
+						if (aPlayers[n].ID == gId)
+							aPlayers[n].setVida(gDmg);
+					}
+				}
+				
 				giveAttack = false;
 			}
 			if (giveMovement) 
@@ -733,8 +739,10 @@ int main()
 
 				giveMovement = false;
 			}
-			if (!myMovement && !myAtack && globalTurn == peers || myPlayer.clase.vida<=0)
+			if (!myMovement && !myAtack && globalTurn == peers || myPlayer.vida<=0)
 			{
+				myAtack = true;
+				myMovement = true;
 				globalTurn = (globalTurn + 1) % 4;
 
 				sf::Packet packet;
@@ -760,8 +768,7 @@ int main()
 
 				mensaje = ">";
 
-				myAtack = true;
-				myMovement = true;
+				
 			}
 		}
 
@@ -872,14 +879,14 @@ int main()
 				for (int c = 0; c < aPlayers.size(); c++)
 				{
 					//std::string chatting = std::to_string(c + 1) + " - " + aPlayers[c].name + "-"+ aPlayers[c].clase.vida;
-					std::string myName = std::to_string(aPlayers[c].clase.vida) + " - " + aPlayers[c].name;
+					std::string myName = std::to_string(aPlayers[c].vida) + " - " + aPlayers[c].name;
 					nameText.setFillColor(CheckTextColor(aPlayers[c].ID));
 					nameText.setPosition(sf::Vector2f(aPlayers[c].x - 20, aPlayers[c].y - 20));
 					nameText.setString(myName);
 					window.draw(nameText);
 				}
 			}
-			std::string myName = std::to_string(myPlayer.clase.vida) + " - " + myPlayer.name;
+			std::string myName = std::to_string(myPlayer.vida) + " - " + myPlayer.name;
 			nameText.setFillColor(CheckTextColor(myPlayer.ID));
 			nameText.setPosition(sf::Vector2f(myPlayer.x - 20, myPlayer.y - 20));
 			nameText.setString(myName);
@@ -891,14 +898,14 @@ int main()
 				for (int c = 0; c < aPlayers.size(); c++)
 				{
 					//std::string chatting = std::to_string(c + 1) + " - " + aPlayers[c].name + "-"+ aPlayers[c].clase.vida;
-					std::string myName = std::to_string(aPlayers[c].clase.vida) + " - " + aPlayers[c].name;
+					std::string myName = std::to_string(aPlayers[c].vida) + " - " + aPlayers[c].name;
 					nameText.setFillColor(CheckTextColor(aPlayers[c].ID));
 					nameText.setPosition(sf::Vector2f(aPlayers[c].x - 20, aPlayers[c].y - 20));
 					nameText.setString(myName);
 					window.draw(nameText);
 				}
 			}
-			std::string myName = std::to_string(myPlayer.clase.vida) + " - " + myPlayer.name;
+			std::string myName = std::to_string(myPlayer.vida) + " - " + myPlayer.name;
 			nameText.setFillColor(CheckTextColor(myPlayer.ID));
 			nameText.setPosition(sf::Vector2f(myPlayer.x - 20, myPlayer.y - 20));
 			nameText.setString(myName);

@@ -15,6 +15,7 @@ Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, int _
 	turno = _turno;
 	ID = _id;
 	clase = getClase(_clase);
+	vida = clase.vida;
 	team = _equipo;
 	playerTexture.loadFromFile(myTexture(_clase));
 	playerSprite.setTexture(playerTexture);
@@ -26,6 +27,7 @@ Player::Player()
 	setPosition(newPosition, 2000, 2000);
 	name = "WHITE";
 	turno = -1;
+	vida = 0;
 	ID = -1;
 	clase = getClase(0);
 	team = -1;
@@ -100,9 +102,9 @@ Classes Player::getClase(int number)
 
 int Player::attack1(Classes _clase , Player _enemy)
 {
-	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)) / 40);
+	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)));
 	int dmg;
-	if (distancia < clase.arma1.range) 
+	if (distancia < clase.arma1.range*40) 
 	{
 		int tocar = _clase.damage + (rand() % 19) + 1;
 
@@ -111,7 +113,7 @@ int Player::attack1(Classes _clase , Player _enemy)
 			dmg = _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
 		}
 		else
-			dmg = 0;
+			dmg = _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
 	}
 	else
 	{
@@ -123,16 +125,24 @@ int Player::attack1(Classes _clase , Player _enemy)
 
 int Player::attack2(Classes _clase, Player _enemy)
 {
+	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)));
 	int dmg;
-	int tocar = _clase.damage + (rand() % 19) + 1;
-
-	if (tocar >= _enemy.clase.CA)
+	if (distancia < clase.arma1.range * 40)
 	{
-		dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
+		int tocar = _clase.damage + (rand() % 19) + 1;
+		std::cout << tocar << std::endl;
+		std::cout << _enemy.clase.CA << std::endl;
+		if (tocar >= _enemy.clase.CA)
+		{
+			dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
+		}
+		else
+			dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
 	}
 	else
-		dmg = 0;
-
+	{
+		dmg = 100;
+	}
 	return dmg;
 }
 
@@ -154,4 +164,7 @@ bool Player::move(int x, int y) {
 		movement = true;
 	}
 	return movement;
+}
+void Player::setVida(int dmg) {
+	this->vida -=dmg;
 }
