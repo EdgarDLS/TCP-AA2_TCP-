@@ -1,11 +1,11 @@
 ﻿  Source.cpp
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(286): warning C4244: 'argumento': conversión de 'float' a 'sf::Int32'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(782): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(799): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(845): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(856): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(883): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(890): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(902): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-c:\hubgeneral\tcp-aa2_tcp-\project1\source.cpp(909): warning C4244: 'argumento': conversión de 'int' a 'float'; posible pérdida de datos
-  Project1.vcxproj -> C:\HubGeneral\TCP-AA2_TCP-\x64\Debug\Client.exe
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(344): warning C4244: 'argument': conversion from 'float' to 'sf::Int32', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(915): warning C4244: 'argument': conversion from '::size_t' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(932): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(978): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(989): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(1016): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(1023): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(1035): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\programming\programacion juegos en redes\tcp - aa2\tcp-aa2_tcp-\project1\source.cpp(1042): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  Project1.vcxproj -> D:\PROGRAMMING\Programacion juegos en redes\TCP - AA2\TCP-AA2_TCP-\x64\Debug\Client.exe

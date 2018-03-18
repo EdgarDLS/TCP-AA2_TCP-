@@ -100,26 +100,25 @@ Classes Player::getClase(int number)
 	}
 }
 
-int Player::attack1(Classes _clase , Player _enemy)
+int Player::attack1(Classes _clase, Player _enemy)
 {
 	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)));
 	int dmg;
-	if (distancia < clase.arma1.range*40) 
+	if (distancia < (this->clase.arma1.range + 1) * 40)
 	{
 		int tocar = _clase.damage + (rand() % 19) + 1;
 
 		if (tocar >= _enemy.clase.CA)
 		{
-			dmg = _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
+			dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
 		}
 		else
-			dmg = _clase.damage + (rand() % (_clase.arma1.damage - 1) + 1);
+			dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
 	}
 	else
 	{
 		dmg = 1000;
 	}
-
 	return dmg;
 }
 
@@ -127,11 +126,10 @@ int Player::attack2(Classes _clase, Player _enemy)
 {
 	int distancia = (int)(sqrt(pow(_enemy.x - this->x, 2) + pow(_enemy.y - this->y, 2)));
 	int dmg;
-	if (distancia < clase.arma1.range * 40)
+	if (distancia < (this->clase.arma2.range + 1) * 40)
 	{
 		int tocar = _clase.damage + (rand() % 19) + 1;
-		std::cout << tocar << std::endl;
-		std::cout << _enemy.clase.CA << std::endl;
+
 		if (tocar >= _enemy.clase.CA)
 		{
 			dmg = _clase.damage + (rand() % (_clase.arma2.damage - 1) + 1);
@@ -141,7 +139,7 @@ int Player::attack2(Classes _clase, Player _enemy)
 	}
 	else
 	{
-		dmg = 100;
+		dmg = 1000;
 	}
 	return dmg;
 }

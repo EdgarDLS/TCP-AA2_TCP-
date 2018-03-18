@@ -22,6 +22,8 @@ bool myMovement = true;
 bool myAtack = true;
 bool giveMovement = false;
 bool giveAttack = false;
+bool giveWinner = false;
+
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
@@ -56,7 +58,8 @@ enum PlayerState
 	Waiting,
 	CharacterCreation,
 	Ready,
-	Playing
+	Playing,
+	Done
 };
 
 Player newPlayer;
@@ -119,6 +122,45 @@ std::string AssignPlayerName(int peerId)
 	}
 
 	return name;
+}
+
+void CheckWinningTeam(bool team0, bool team1, std::vector<sf::TcpSocket*> peers)
+{
+	
+
+	if (team0 || team1)
+	{
+		sf::Packet winnerPacket;
+
+		winnerPacket << (sf::String)"WINNER";
+
+		if (team0)
+		{
+			winnerPacket << "1";
+		}
+		else if (team1)
+		{
+			winnerPacket << "0";
+		}
+
+		for (int i = 0; i < peers.size(); i++)
+			peers[i]->send(winnerPacket);
+
+		giveWinner = true;
+	}
+}
+
+void WriteMessage(std::vector<std::string>* aMsjs, std::vector<int>* msgColor, sf::String message, int color)
+{
+	aMsjs->push_back(message);
+	msgColor->push_back(color);
+
+	while (aMsjs->size() > 7)
+	{
+		aMsjs->erase(aMsjs->begin(), aMsjs->begin() + 1);
+		msgColor->erase(msgColor->begin(), msgColor->begin() + 1);
+	}
+		
 }
 
 void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* msgColor, std::vector<Player>* _aPlayers, std::vector<sf::TcpSocket*> peers)
@@ -226,12 +268,26 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					text = "ATAQUE - Jugador " + to_string(i) + " ha atacado a Jugador " + to_string(aId);
 					peerId = 4;
 				}
-				else if (command == "TURN")
+				else if (command == "ENDTURN")
 				{
+					int playerId;
+
+					packet >> globalTurn;
+					packet >> playerId;
+
+					std::cout << "El Jugador  " << AssignPlayerName(playerId) << " ha acabado el turno ";
+					text = "Turno del jugador " + AssignPlayerName(playerId) + " ha acabado";
+				}
+				else if (command == "WINNER")
+				{
+					std::string winnerTeam;
+
 					packet >> globalTurn;
 
-					std::cout << "El Jugador  " << i << " ha acabado el turno ";
-					text = "Turno del jugador " + to_string(i) + " ha acabado";
+					giveWinner = true;
+
+					std::cout << "Gana el equipo  " << winnerTeam;
+					text = "GANA EL EQUIPO " + winnerTeam + "! FECLIDIDADES!";
 				}
 				else
 				{
@@ -246,17 +302,11 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					peers[i]->disconnect();
 					peers.erase(peers.begin() + i);
 
-					aMsjs->push_back("Se ha desconectado un jugador");
-					msgColor->push_back(4);
+					WriteMessage(aMsjs, msgColor, "Se ha desconectado un jugador", 4);
 				}
 				else
 				{
-					aMsjs->push_back(text);
-					msgColor->push_back(peerId);
-
-					while (aMsjs->size() > 7)
-						aMsjs->erase(aMsjs->begin() + i);
-						//msgColor->erase(msgColor->begin() + i);
+					WriteMessage(aMsjs, msgColor, text, peerId);
 				}
 				break;
 			}
@@ -436,8 +486,7 @@ int main()
 
 							mensaje = "MOVIMIENTO - Me he movido";
 
-							aMensajes.push_back(mensaje);
-							messageColor.push_back(4);
+							
 
 							// Send the message to the rest of the clients.
 							for (int i = 0; i < peersVector.size(); i++)
@@ -445,13 +494,9 @@ int main()
 								std::cout << "MOVEMENT | SENDING" << std::endl;
 								peersVector[i]->send(packet);
 							}
-							if (aMensajes.size() > 7)
-							{
-								mut.lock();
-								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-								mut.unlock();
-							}
+
+
+							WriteMessage(&aMensajes, &messageColor, mensaje, 4);
 
 							mensaje = ">";
 
@@ -461,16 +506,9 @@ int main()
 						{						
 							mensaje = "MOVIMIENTO - Fuera de rango";
 
-							aMensajes.push_back(mensaje);
-							messageColor.push_back(4);
+							
 
-							if (aMensajes.size() > 7)
-							{
-								mut.lock();
-								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-								mut.unlock();
-							}
+							WriteMessage(&aMensajes, &messageColor, mensaje, 4);
 
 							mensaje = ">";
 						}
@@ -518,26 +556,30 @@ int main()
 						packet << (sf::String)"MESSAGE";
 						packet << mensaje << peers;
 
-						aMensajes.push_back(mensaje);
-						messageColor.push_back(peers);
+						
 
 						// Send the message to the rest of the clients.
 						for (int i = 0; i < peersVector.size(); i++)
 							peersVector[i]->send(packet);
 
-						if (aMensajes.size() > 7)
-						{
-							mut.lock();
-							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-							mut.unlock();
-						}
+
+						WriteMessage(&aMensajes, &messageColor, mensaje, peers);
 
 						mensaje = ">";
 					}
 					else if (myState == Playing)
 					{
 						sf::Packet packet;
+						std::string endIdentificator = "/end";
+
+						/*
+						// End turn identification
+						if (!endIdentificator.compare((std::string)mensa))
+						{
+							std::cout << "ENDTURN" << std::endl;
+							packet << (sf::String)"ENDTURN";
+						}
+						*/
 
 						// Attak command identification					
 						// STRUCTURE | command << weaponSlot << playerId << damageDealt
@@ -579,6 +621,7 @@ int main()
 							
 							int dmg=6;
 							int theEnemy;
+
 							for (int n = 0; n < aPlayers.size() ; n++)
 							{
 								if (aPlayers[n].ID == enemyId)
@@ -596,15 +639,8 @@ int main()
 							{
 								mensaje = "ATAQUE - Fuera de rango";
 
-								aMensajes.push_back(mensaje);
-								messageColor.push_back(4);
 
-								if (aMensajes.size() > 7)
-								{
-									mut.lock();
-									aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-									mut.unlock();
-								}
+								WriteMessage(&aMensajes, &messageColor, mensaje, 4);
 							}
 							else
 							{
@@ -618,16 +654,8 @@ int main()
 								for (int i = 0; i < peersVector.size(); i++)
 									peersVector[i]->send(packet);
 								
-								aMensajes.push_back("ATAQUE realizado");
-								messageColor.push_back(peers);
 
-								if (aMensajes.size() > 7)
-								{
-									mut.lock();
-									aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-									//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-									mut.unlock();
-								}
+								WriteMessage(&aMensajes, &messageColor, "ATAQUE realizado", peers);
 
 								myAtack = false;
 								//comprobar victoria
@@ -643,12 +671,12 @@ int main()
 										team1Dead = false;
 									}
 								}
-								if (team0Dead) {
-									//send team 1 win
-								}
-								if (team1Dead) {
-									//send team 0 win;
-								}
+								if (myPlayer.team == 0)
+									team0Dead = false;
+								else 
+									team1Dead = false;
+
+								CheckWinningTeam(team0Dead, team1Dead, peersVector);
 							}
 						}
 						else
@@ -656,20 +684,13 @@ int main()
 							packet << (sf::String)"MESSAGE";
 							packet << mensaje << peers;
 
-							aMensajes.push_back(mensaje);
-							messageColor.push_back(peers);
+							
 
 							// Send the message to the rest of the clients.
 							for (int i = 0; i < peersVector.size(); i++)
 								peersVector[i]->send(packet);
 
-							if (aMensajes.size() > 7)
-							{
-								mut.lock();
-								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-								mut.unlock();
-							}
+							WriteMessage(&aMensajes, &messageColor, mensaje, peers);
 						}
 
 						mensaje = ">";
@@ -705,14 +726,20 @@ int main()
 				std::cout << "Cambia a playing " << std::endl;
 				myState = Playing;
 				globalTurn = 0;
+
+				WriteMessage(&aMensajes, &messageColor, "COMIENZA EL JUEGO!", 4);
 			}
 			
 		}
 		if (myState == Playing) 
 		{
-			if (giveAttack) {
+			if (giveWinner)
+			{
+				myState = Done;
+			}
+			else if (giveAttack) {
 				std::cout << " Send ATTACK " << std::endl;
-				if (gId = myPlayer.ID)
+				if (gId == myPlayer.ID)
 				{
 					myPlayer.setVida(gDmg);
 				}
@@ -727,7 +754,7 @@ int main()
 				
 				giveAttack = false;
 			}
-			if (giveMovement) 
+			else if (giveMovement) 
 			{
 				std::cout << " Send MOVEMENT " << std::endl;
 
@@ -739,32 +766,27 @@ int main()
 
 				giveMovement = false;
 			}
-			if (!myMovement && !myAtack && globalTurn == peers || myPlayer.vida<=0)
+			else if (!myMovement && !myAtack && globalTurn == peers || (myPlayer.vida<=0 && globalTurn == peers))
 			{
 				myAtack = true;
 				myMovement = true;
 				globalTurn = (globalTurn + 1) % 4;
 
 				sf::Packet packet;
-				packet << (sf::String)"TURN";
+				packet << (sf::String)"ENDTURN";
 				packet << globalTurn;
+				packet << peers;
 
 				mensaje = "Turno finalizado";
 
-				aMensajes.push_back(mensaje);
-				messageColor.push_back(4);
+				
 
 				// Send the message to the rest of the clients.
 				for (int i = 0; i < peersVector.size(); i++)
 					peersVector[i]->send(packet);
 
-				if (aMensajes.size() > 7)
-				{
-					mut.lock();
-					aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-					//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-					mut.unlock();
-				}
+
+				WriteMessage(&aMensajes, &messageColor, mensaje, 4);
 
 				mensaje = ">";
 
