@@ -205,24 +205,22 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					text = "MOVIMIENTO - Jugador " + to_string(i) + " se ha movido";
 					peerId = 4;
 				}
+
+				// STRUCTURE | command << weaponSlot << playerId << damageDealt
 				else if (command == "ATTACK")
 				{
+					int aWeaponSlot;
 					int aId;
 					int aDmg;
 
-
+					packet >> aWeaponSlot;
 					packet >> aId;
 					packet >> aDmg;
-					
-
-
 
 					gId = aId;
 					gDmg = aDmg;
 					
 					giveAttack = true;
-
-
 
 					std::cout << "ATTACK - Jugador " << i << " ha atacado ";
 					text = "ATAQUE - Jugador " + to_string(i) + " ha atacado a Jugador " + to_string(aId);
@@ -540,75 +538,142 @@ int main()
 					else if (myState == Playing)
 					{
 						sf::Packet packet;
-						packet << (sf::String)"MESSAGE";
-						packet << mensaje << peers;
 
-						aMensajes.push_back(mensaje);
-						messageColor.push_back(peers);
+						// Attak command identification					
+						// STRUCTURE | command << weaponSlot << playerId << damageDealt
+						if (mensaje.find('/') != std::string::npos)
+						{
+							std::cout << "ATTACK" << std::endl;
+							packet << (sf::String)"ATTACK";
 
-						// Send the message to the rest of the clients.
-						for (int i = 0; i < peersVector.size(); i++)
-							peersVector[i]->send(packet);
+							int weaponSlot;
+							int enemyId;
 
-						if (aMensajes.size() > 7)
-						{
-							mut.lock();
-							aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
-							//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
-							mut.unlock();
+							if (mensaje.find('>') != std::string::npos)
+							{
+								std::string values = (std::string)mensaje.substring(2, 1);
+								packet << atoi(values.c_str());
+
+								weaponSlot = atoi(values.c_str());
+
+								values = (std::string)mensaje.substring(4, 1);;
+								packet << atoi(values.c_str());
+
+								enemyId = atoi(values.c_str());
+							}
+							else
+							{
+								std::string values = (std::string)mensaje.substring(1, 1);
+								packet << atoi(values.c_str());
+
+								weaponSlot = atoi(values.c_str());
+
+								values = (std::string)mensaje.substring(3, 1);;
+								packet << atoi(values.c_str());
+
+								enemyId = atoi(values.c_str());
+							}
+
+							int dmg;
+
+							if (weaponSlot == 1)
+							{
+								dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemyId]);
+							}
+							else if (weaponSlot == 2)
+							{
+								dmg = myPlayer.attack2(myPlayer.clase, aPlayers[enemyId]);
+							}
+							if (dmg == 1000)
+							{
+								mensaje = "ATAQUE - Fuera de rango";
+
+								aMensajes.push_back(mensaje);
+								messageColor.push_back(4);
+
+								if (aMensajes.size() > 7)
+								{
+									mut.lock();
+									aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+									mut.unlock();
+								}
+							}
+							else
+							{
+								for (int n = 0; n < aPlayers.size(); n++)
+								{
+									if (aPlayers[n].ID == enemyId)
+									{
+										std::cout << "BEFORE | " << aPlayers[n].clase.vida << std::endl;
+										aPlayers[n].clase.vida = aPlayers[n].clase.vida - dmg;
+										std::cout << "AFTER | " << aPlayers[n].clase.vida << std::endl;
+									}
+										
+
+									
+								}
+								//enviamos el paquete con el daño y el id del jugador;
+								packet << dmg;
+
+								// Send the message to the rest of the clients.
+								for (int i = 0; i < peersVector.size(); i++)
+									peersVector[i]->send(packet);
+
+
+								aMensajes.push_back("ATAQUE realizado");
+								messageColor.push_back(peers);
+
+								if (aMensajes.size() > 7)
+								{
+									mut.lock();
+									aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+									//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
+									mut.unlock();
+								}
+
+								myAtack = false;
+								//comprobar victoria
+								bool team0Dead = true;
+								bool team1Dead = true;
+
+								for (int n = 0; n < aPlayers.size(); n++)
+								{
+									if (aPlayers[n].team == 0 && aPlayers[n].clase.vida > 0) {
+										team0Dead = false;
+									}
+									if (aPlayers[n].team == 1 && aPlayers[n].clase.vida > 0) {
+										team1Dead = false;
+									}
+								}
+								if (team0Dead) {
+									//send team 1 win
+								}
+								if (team1Dead) {
+									//send team 0 win;
+								}
+							}
 						}
-						int enemy = 1;
-						int dmg;
-						if (1)
+						else
 						{
-							dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemy]);
-						}
-						else if (2)
-						{
-							dmg = myPlayer.attack1(myPlayer.clase, aPlayers[enemy]);
-						}
-						if (dmg == 1000) 
-						{
-							mensaje = "ATAQUE - Fuera de rango";
+							packet << (sf::String)"MESSAGE";
+							packet << mensaje << peers;
 
 							aMensajes.push_back(mensaje);
-							messageColor.push_back(4);
+							messageColor.push_back(peers);
+
+							// Send the message to the rest of the clients.
+							for (int i = 0; i < peersVector.size(); i++)
+								peersVector[i]->send(packet);
 
 							if (aMensajes.size() > 7)
 							{
 								mut.lock();
 								aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
+								//messageColor.erase(messageColor.begin(), messageColor.begin() + 1);
 								mut.unlock();
 							}
 						}
-						else
-						{
-							for (int n = 0; n < aPlayers.size(); n++)
-							{
-								if (aPlayers[n].ID == enemy)
-									aPlayers[n].clase.vida = aPlayers[n].clase.vida - gDmg;
-							}							
-							//enviamos el paquete con el daño y el id del jugador;
-							myAtack = false;
-							//comprobar victoria
-							bool team0Dead = true;
-							bool team1Dead = true;
-							for (int n = 0; n < aPlayers.size(); n++)
-							{
-								if (aPlayers[n].team == 0 && aPlayers[n].clase.vida > 0) {
-									team0Dead = false;
-								}
-								if (aPlayers[n].team == 1 && aPlayers[n].clase.vida > 0) {
-									team1Dead = false;
-								}
-							}
-							if (team0Dead) {
-								//send team 1 win
-							}
-							if (team1Dead) {
-								//send team 0 win;
-							}
-						}
+
 						mensaje = ">";
 					}
 				}
