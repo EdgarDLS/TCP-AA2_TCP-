@@ -6,9 +6,15 @@
 #include <list>
 #include <thread>
 #include <mutex>
+#include"Player.h"
+
+sf::Sprite paladinSprite;
+sf::Texture paladinTexture;
+sf::Vector2f paladinPosition(120,20);
 
 #define MAX_MENSAJES 30
 std::mutex mut;
+
 
 
 sf::Color CheckTextColor(int peerId)
@@ -89,6 +95,11 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 int main()
 {
+	sf::Vector2f player1Position(200, 120);
+	Player player1 = Player((string)"Albert", 1, 1, 4, 1, player1Position);
+	sf::Vector2f player2Position(240, 160);
+	Player player2 = Player((string)"Alberte", 1, 1, 4, 1, player2Position);
+
 	std::vector<std::string> aMensajes;
 	std::vector<int> messageColor;
 
@@ -116,6 +127,9 @@ int main()
 		// Client number
 		packet >> peers;
 		std::cout << "Peers actuales: " << peers << std::endl;
+		
+		
+		
 
 		for (int i = 0; i < peers; i++)
 		{
@@ -164,15 +178,19 @@ int main()
 	aMensajes.push_back("Todos los clientes estan listos");
 	messageColor.push_back(4);
 	std::cout << "Peer numero: " << peers << std::endl;
-
+	
 	// PARTE GRAFICA
 
-	sf::Vector2i screenDimensions(800, 600);
+	sf::Vector2i screenDimensions(1000, 800);
 
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "Chat");
 
 	sf::Font font;
+	
+	paladinTexture.loadFromFile("paladin.png");
+	paladinSprite.setTexture(paladinTexture);
+	
 	if (!font.loadFromFile("DroidSans.ttf"))
 	{
 		std::cout << "Can't load the font file" << std::endl;
@@ -208,6 +226,18 @@ int main()
 				window.close();
 				exit(0);
 				break;
+			case sf::Event::MouseButtonPressed:
+				if (evento.mouseButton.button == sf::Mouse::Left)
+				{
+					int x = evento.mouseButton.x;
+					int y = evento.mouseButton.y;
+
+					//POKEMON1
+					/*if (x > Player1.x && x < Player1.x + 80.f && y > Player1.y && y < Player1.y + 80.f)
+					{
+						A = sf::Vector2f(Player1.x + 20, Player1.y - 35);
+					}*/
+				}
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Escape)
 					window.close();
@@ -255,8 +285,23 @@ int main()
 		text.setString(mensaje_);
 		window.draw(text);
 
+		//aqui van las imagenes
+		paladinSprite.setScale(0.25f, 0.25f);
+		paladinSprite.setPosition(paladinPosition); 
+
+		player1.playerSprite.setScale(0.25f, 0.25f);
+		player1.playerSprite.setPosition(player1.position);
+		window.draw(player1.playerSprite);
+		player2.playerSprite.setScale(0.25f, 0.25f);
+		player2.playerSprite.setPosition(player2.position);
+		window.draw(player2.playerSprite);
+		
+		window.draw(paladinSprite);
+		
+		
 
 		window.display();
+
 		window.clear();
 	}
 

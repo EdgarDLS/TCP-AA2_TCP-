@@ -1,11 +1,46 @@
 #include"Player.h"
-Player::Player(string _name, int _turno, int _id, int _clase, int _equipo) 
+Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, sf::Vector2f _position)
 {
 	name = _name;
 	turno = _turno;
 	ID = _id;
 	clase = getClase(_clase);
 	Team = _equipo;
+	position = _position;
+	playerTexture.loadFromFile(myTexture(_clase));
+	playerSprite.setTexture(playerTexture);
+}
+
+string Player::myTexture(int number) {
+	switch (number) {
+	case 1:
+		return "paladin.png";
+		break;
+	case 2:
+		return "barbarian.png";
+		break;
+	case 3:
+		return "assassin.png";
+		break;
+	case 4:
+		return "square.png";
+		break;
+	case 5:
+		return "shadowblade.png";
+		break;
+	case 6:
+		return "metamorph.png";
+		break;
+	case 7:
+		return "monk.png";
+		break;
+	case 8:
+		return "mage.png";
+		break;
+	default:
+		return "peasant.png";
+		break;
+	}
 }
 
 Classes Player::getClase(int number)
@@ -55,6 +90,7 @@ int Player::attack1(Classes _clase , Player _enemy)
 
 	return dmg;
 }
+
 int Player::attack2(Classes _clase, Player _enemy)
 {
 	int dmg;
@@ -68,4 +104,11 @@ int Player::attack2(Classes _clase, Player _enemy)
 		dmg = 0;
 
 	return dmg;
+}
+
+sf::Vector2f Player::getPosiotion() {
+	return this->position;
+}
+void Player::setPosition(sf::Vector2f _position) {
+	this->position = _position;
 }
