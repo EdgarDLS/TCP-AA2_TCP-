@@ -8,9 +8,7 @@
 #include <mutex>
 #include"Player.h"
 
-sf::Sprite paladinSprite;
-sf::Texture paladinTexture;
-sf::Vector2f paladinPosition(120,0);
+;
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
@@ -98,10 +96,8 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 int main()
 {
-	sf::Vector2f player1Position(200, 120);
-	Player player1 = Player((string)"Albert", 1, 1, 4, 1, player1Position);
-	sf::Vector2f player2Position(320, 80);
-	Player player2 = Player((string)"Alberte", 1, 1, 6, 1, player2Position);
+	Player player1 = Player((string)"Albert", 1, 1, 4, 1, 200, 120);
+	Player player2 = Player((string)"Alberte", 1, 1, 6, 1, 320,80);
 
 	std::vector<std::string> aMensajes;
 	std::vector<int> messageColor;
@@ -190,10 +186,9 @@ int main()
 	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "Chat");
 
 	sf::Font font;
-	mapaTexture.loadFromFile("mapa.png");
+	mapaTexture.loadFromFile("mapa2.png");
 	mapaSprite.setTexture(mapaTexture);
-	paladinTexture.loadFromFile("paladin.png");
-	paladinSprite.setTexture(paladinTexture);
+	
 	
 	if (!font.loadFromFile("DroidSans.ttf"))
 	{
@@ -210,11 +205,14 @@ int main()
 	sf::Text text(mensaje, font, 14);
 	text.setFillColor(CheckTextColor(peers));
 	text.setStyle(sf::Text::Bold);
-	text.setPosition(0, 560);
+	text.setPosition(0, 630);
 
 	sf::RectangleShape separator(sf::Vector2f(800, 5));
 	separator.setFillColor(sf::Color(200, 200, 200, 255));
-	separator.setPosition(0, 550);
+	separator.setPosition(0, 620);
+	sf::RectangleShape chatRect(sf::Vector2f(800, 150));
+	chatRect.setFillColor(sf::Color(100,100, 100, 160));
+	chatRect.setPosition(0, 650);
 
 	// Thread to receive packets
 	std::thread sockSelecThread(&thread_socket_selector, &aMensajes, &messageColor, peersVector);
@@ -251,11 +249,6 @@ int main()
 						}
 						player1.move(x, y);
 					}
-					//POKEMON1
-					/*if (x > Player1.x && x < Player1.x + 80.f && y > Player1.y && y < Player1.y + 80.f)
-					{
-						A = sf::Vector2f(Player1.x + 20, Player1.y - 35);
-					}*/
 				}
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Escape)
@@ -272,7 +265,7 @@ int main()
 					for (int i = 0; i < peersVector.size(); i++)
 						peersVector[i]->send(packet);
 
-					if (aMensajes.size() > 25)
+					if (aMensajes.size() > 7)
 					{
 						mut.lock();
 						aMensajes.erase(aMensajes.begin(), aMensajes.begin() + 1);
@@ -290,26 +283,27 @@ int main()
 				break;
 			}
 		}
-
+		//separator
 		window.draw(separator);
+		window.draw(chatRect);
 		for (size_t i = 0; i < aMensajes.size(); i++)
 		{
 			std::string chatting = aMensajes[i];
 			chattingText.setFillColor(CheckTextColor(messageColor[i]));
 			chattingText.setPosition(sf::Vector2f(0, 20 * i));
 			chattingText.setString(chatting);
+			chattingText.move(10, 650);
 			window.draw(chattingText);
 		}
 		std::string mensaje_ = mensaje + "_";
 		text.setString(mensaje_);
+		//text.move(10, 630);
 		window.draw(text);
 
 		//aqui van las imagenes
 		mapaSprite.setPosition(mapaPosition);
-		
 		window.draw(mapaSprite);
-		paladinSprite.setScale(0.25f, 0.25f);
-		paladinSprite.setPosition(paladinPosition); 
+	
 
 		
 
@@ -320,7 +314,7 @@ int main()
 		player2.playerSprite.setPosition(player2.position);
 		window.draw(player2.playerSprite);
 		
-		window.draw(paladinSprite);
+		
 		
 		
 

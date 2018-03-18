@@ -1,14 +1,13 @@
 #include"Player.h"
-Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, sf::Vector2f _position)
+Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, int _x, int _y)
 {
-	x = 0;
-	y = 0;
+	sf::Vector2f newPosition(_x, _y);
+	setPosition(newPosition, _x, _y);
 	name = _name;
 	turno = _turno;
 	ID = _id;
 	clase = getClase(_clase);
 	Team = _equipo;
-	position = _position;
 	playerTexture.loadFromFile(myTexture(_clase));
 	playerSprite.setTexture(playerTexture);
 }

@@ -19,7 +19,7 @@ public:
 	sf::Sprite playerSprite;
 	sf::Texture playerTexture;
 
-	Player(string name, int turno, int id, int clase, int equipo, sf::Vector2f position);
+	Player(string name, int turno, int id, int clase, int equipo, int x, int y);
 	
 	Classes getClase(int Clase);
 	string myTexture(int number);
