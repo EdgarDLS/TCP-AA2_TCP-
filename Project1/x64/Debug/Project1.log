@@ -1,4 +1,1 @@
-﻿  Source.cpp
-c:\hubgeneral\tcp\tcp-aa2_tcp-\project1\source.cpp(115): warning C4244: 'argumento': conversión de 'float' a 'sf::Int32'; posible pérdida de datos
-c:\hubgeneral\tcp\tcp-aa2_tcp-\project1\source.cpp(280): warning C4244: 'argumento': conversión de '::size_t' a 'float'; posible pérdida de datos
-  Project1.vcxproj -> C:\HubGeneral\TCP\TCP-AA2_TCP-\x64\Debug\Client.exe
+﻿  Project1.vcxproj -> C:\HubGeneral\TCP\TCP-AA2_TCP-\x64\Debug\Client.exe

@@ -10,7 +10,10 @@
 
 sf::Sprite paladinSprite;
 sf::Texture paladinTexture;
-sf::Vector2f paladinPosition(120,20);
+sf::Vector2f paladinPosition(120,0);
+sf::Sprite mapaSprite;
+sf::Texture mapaTexture;
+sf::Vector2f mapaPosition(0, 15);
 
 #define MAX_MENSAJES 30
 std::mutex mut;
@@ -97,8 +100,8 @@ int main()
 {
 	sf::Vector2f player1Position(200, 120);
 	Player player1 = Player((string)"Albert", 1, 1, 4, 1, player1Position);
-	sf::Vector2f player2Position(240, 160);
-	Player player2 = Player((string)"Alberte", 1, 1, 4, 1, player2Position);
+	sf::Vector2f player2Position(320, 80);
+	Player player2 = Player((string)"Alberte", 1, 1, 6, 1, player2Position);
 
 	std::vector<std::string> aMensajes;
 	std::vector<int> messageColor;
@@ -187,7 +190,8 @@ int main()
 	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "Chat");
 
 	sf::Font font;
-	
+	mapaTexture.loadFromFile("mapa.png");
+	mapaSprite.setTexture(mapaTexture);
 	paladinTexture.loadFromFile("paladin.png");
 	paladinSprite.setTexture(paladinTexture);
 	
@@ -231,7 +235,22 @@ int main()
 				{
 					int x = evento.mouseButton.x;
 					int y = evento.mouseButton.y;
-
+					if (x < 600 && y < 600) 
+					{
+						for (int n = 0; n <= 15; n++) {
+							if (n * 40 <= x && (n + 1) * 40 > x) {
+								x = n*40;
+								break;
+							}
+						}
+						for (int n = 0; n <= 15; n++) {
+							if (n * 40 <= y && (n + 1) * 40 > y) {
+								y = n * 40;
+								break;
+							}
+						}
+						player1.move(x, y);
+					}
 					//POKEMON1
 					/*if (x > Player1.x && x < Player1.x + 80.f && y > Player1.y && y < Player1.y + 80.f)
 					{
@@ -286,8 +305,13 @@ int main()
 		window.draw(text);
 
 		//aqui van las imagenes
+		mapaSprite.setPosition(mapaPosition);
+		
+		window.draw(mapaSprite);
 		paladinSprite.setScale(0.25f, 0.25f);
 		paladinSprite.setPosition(paladinPosition); 
+
+		
 
 		player1.playerSprite.setScale(0.25f, 0.25f);
 		player1.playerSprite.setPosition(player1.position);

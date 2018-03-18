@@ -1,6 +1,8 @@
 #pragma once
 #include <SFML\Graphics.hpp>
 #include"Classes.h"
+#include <math.h>
+
 using namespace std;
 #include <string>
 class Player
@@ -9,6 +11,8 @@ public:
 	int turno;
 	int ID;
 	int Team;
+	int x;
+	int y;
 	string name;
 	Classes clase;	
 	sf::Vector2f position;
@@ -24,7 +28,7 @@ public:
 	int attack2(Classes _clase, Player _enemy);
 
 	sf::Vector2f getPosiotion();
-	void setPosition(sf::Vector2f position);
+	void setPosition(sf::Vector2f position,int x, int y);
 
-	sf::Vector2f move();
+	void move(int x, int y);
 };

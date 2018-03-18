@@ -1,6 +1,8 @@
 #include"Player.h"
 Player::Player(string _name, int _turno, int _id, int _clase, int _equipo, sf::Vector2f _position)
 {
+	x = 0;
+	y = 0;
 	name = _name;
 	turno = _turno;
 	ID = _id;
@@ -23,7 +25,7 @@ string Player::myTexture(int number) {
 		return "assassin.png";
 		break;
 	case 4:
-		return "square.png";
+		return "archer.png";
 		break;
 	case 5:
 		return "shadowblade.png";
@@ -109,6 +111,16 @@ int Player::attack2(Classes _clase, Player _enemy)
 sf::Vector2f Player::getPosiotion() {
 	return this->position;
 }
-void Player::setPosition(sf::Vector2f _position) {
-	this->position = _position;
+void Player::setPosition(sf::Vector2f _position, int _x, int _y) {
+	position = _position;
+	x = _x;
+	y = _y;
+}
+
+void Player::move(int x, int y) {
+	int distancia =(int) (sqrt(pow(x-this->x, 2) + pow(y-this->y, 2))/40);
+	if (distancia < this->clase.movement) {
+		sf::Vector2f newPosition(x, y);
+		setPosition(newPosition,x,y);
+	}
 }
