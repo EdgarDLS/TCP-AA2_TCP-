@@ -15,7 +15,11 @@ int gClass;
 int gTeam;
 int gX;
 int gY;
+int globalTurn=30;
 bool giveNewPlayer = false;
+bool myMovement = true;
+bool myAtack = false;
+bool giveMovement = false;
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
@@ -173,6 +177,34 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					text = "El jugador " + aName + " ha escogido la clase " + differentClasses[aClass -1];
 					peerId = 4;
 				}
+
+				else if (command == "MOVEMENT")
+				{
+					//std::cout << "PLAYER | NEW" << std::endl;
+
+					
+					int aId;
+					int aX;
+					int aY;
+
+					
+
+					
+					packet >> aId;
+					packet >> aX;
+					packet >> aY;
+
+
+					
+					gId = aId;
+					
+					gX = aX;
+					gY = aY;
+					giveMovement = true;
+
+					text = "El jugador " + to_string(aId) + " se ha movido ";
+					peerId = 4;
+				}
 				else
 				{
 					//std::cout << "MESSAGE | NEW" << std::endl;
@@ -324,6 +356,10 @@ int main()
 	classesText.setFillColor(sf::Color(255, 255, 255));
 	classesText.setStyle(sf::Text::Bold);
 
+	sf::Text nameText(mensaje, font, 14);
+	nameText.setFillColor(sf::Color(255, 255, 255));
+	nameText.setStyle(sf::Text::Bold);
+
 	sf::RectangleShape separator(sf::Vector2f(800, 5));
 	separator.setFillColor(sf::Color(200, 200, 200, 255));
 	separator.setPosition(0, 620);
@@ -331,7 +367,7 @@ int main()
 	chatRect.setFillColor(sf::Color(100,100, 100, 160));
 	chatRect.setPosition(0, 650);
 
-	// Thread to receive packets
+	////////// Thread to receive packets////////////////////////////////////////////////
 	std::thread sockSelecThread(&thread_socket_selector, &aMensajes, &messageColor, &aPlayers, peersVector);
 
 	while (window.isOpen())
@@ -345,8 +381,9 @@ int main()
 				window.close();
 				exit(0);
 				break;
+/////////////////////////////CLICK RATON /////////////////////////////////////////////////////////////////////
 			case sf::Event::MouseButtonPressed:
-				if (evento.mouseButton.button == sf::Mouse::Left)
+				if (evento.mouseButton.button == sf::Mouse::Left && globalTurn==myPlayer.ID && myMovement)
 				{
 					int x = evento.mouseButton.x;
 					int y = evento.mouseButton.y;
@@ -368,7 +405,7 @@ int main()
 
 						sf::Packet packet;
 						packet << "MOVEMENT";
-						packet << x << y;
+						packet << peers << x << y;
 
 						aMensajes.push_back(mensaje);
 						messageColor.push_back(peers);
@@ -386,11 +423,30 @@ int main()
 						}
 
 						mensaje = ">";
+						
+
+
+						
+						///////////////////
+						/*sf::Packet packet;
+
+						mensaje = ">";
+
+						packet << "MOVEMENT";
+						packet << x;
+						packet << y;
+						packet << myPlayer.ID;
+						
+
+						for (int i = 0; i < peersVector.size(); i++)
+							peersVector[i]->send(packet);*/
+						myMovement = true;
 					}
 				}
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Escape)
 					window.close();
+////////////////////////TECLA ENTER////////////////////////////////////////////////////////////////				
 				else if (evento.key.code == sf::Keyboard::Return)
 				{
 					if (myState == CharacterCreation)
@@ -481,18 +537,43 @@ int main()
 			}
 		}
 		//separator
-		if (myState == Ready || myState == CharacterCreation) {
+		if (myState == CharacterCreation) 
+		{
 			if (giveNewPlayer)
 			{
 				aPlayers.push_back(Player(gName, gTurn, gId, gClass, gTeam, gX, gY));
 				giveNewPlayer = false;
 			}
-			if (aPlayers.size() == 4) 
+		}
+		if (myState == Ready) 
+		{
+			if (giveNewPlayer)
 			{
+				aPlayers.push_back(Player(gName, gTurn, gId, gClass, gTeam, gX, gY));
+				giveNewPlayer = false;
+			}
+			if (aPlayers.size() == 3) 
+			{
+				std::cout << "Cambia a playing " << std::endl;
 				myState = Playing;
+				globalTurn = 0;
 			}
 			
 		}
+		if (myState == Playing) 
+		{
+			if (giveMovement) 
+			{
+				std::cout << " Send MOVEMENT " << std::endl;
+
+				for (int n = 0; n < aPlayers.size(); n++) 
+				{
+					if (aPlayers[n].ID == gId)
+						aPlayers[n].move(gX, gY);
+				}
+			}
+		}
+
 
 		window.draw(separator);
 		window.draw(chatRect);
@@ -523,8 +604,18 @@ int main()
 				window.draw(classesText);
 			}
 		}
+		if (myState == CharacterCreation)
+		{
+			for (int c = 0; c < differentClasses->size() + 1; c++)
+			{
+				std::string chatting = std::to_string(c + 1) + " - " + differentClasses[c];
+				classesText.setFillColor(classesColor[c]);
+				classesText.setPosition(sf::Vector2f(650, (50 * c) + 60));
+				classesText.setString(chatting);
+				window.draw(classesText);
+			}
+		}
 		
-
 		//aqui van las imagenes
 		mapaSprite.setPosition(mapaPosition);
 		window.draw(mapaSprite);	
@@ -538,8 +629,44 @@ int main()
 		myPlayer.playerSprite.setTexture(myPlayer.playerTexture);
 		myPlayer.playerSprite.setScale(0.25f, 0.25f);
 		myPlayer.playerSprite.setPosition(myPlayer.position);
-		window.draw(myPlayer.playerSprite);		
-
+		window.draw(myPlayer.playerSprite);	
+		if (myState != CharacterCreation) {
+			if (aPlayers.size() > 0) {
+				for (int c = 0; c < aPlayers.size(); c++)
+				{
+					//std::string chatting = std::to_string(c + 1) + " - " + aPlayers[c].name + "-"+ aPlayers[c].clase.vida;
+					std::string myName = std::to_string(aPlayers[c].clase.vida) + " - " + aPlayers[c].name;
+					nameText.setFillColor(CheckTextColor(aPlayers[c].ID));
+					nameText.setPosition(sf::Vector2f(aPlayers[c].x - 20, aPlayers[c].y - 20));
+					nameText.setString(myName);
+					window.draw(nameText);
+				}
+			}
+			std::string myName = std::to_string(myPlayer.clase.vida) + " - " + myPlayer.name;
+			nameText.setFillColor(CheckTextColor(myPlayer.ID));
+			nameText.setPosition(sf::Vector2f(myPlayer.x - 20, myPlayer.y - 20));
+			nameText.setString(myName);
+			window.draw(nameText);
+			
+		}
+		if (myState != CharacterCreation) {
+			if (aPlayers.size() > 0) {
+				for (int c = 0; c < aPlayers.size(); c++)
+				{
+					//std::string chatting = std::to_string(c + 1) + " - " + aPlayers[c].name + "-"+ aPlayers[c].clase.vida;
+					std::string myName = std::to_string(aPlayers[c].clase.vida) + " - " + aPlayers[c].name;
+					nameText.setFillColor(CheckTextColor(aPlayers[c].ID));
+					nameText.setPosition(sf::Vector2f(aPlayers[c].x - 20, aPlayers[c].y - 20));
+					nameText.setString(myName);
+					window.draw(nameText);
+				}
+			}
+			std::string myName = std::to_string(myPlayer.clase.vida) + " - " + myPlayer.name;
+			nameText.setFillColor(CheckTextColor(myPlayer.ID));
+			nameText.setPosition(sf::Vector2f(myPlayer.x - 20, myPlayer.y - 20));
+			nameText.setString(myName);
+			window.draw(nameText);
+		}
 		window.display();
 
 		window.clear();
