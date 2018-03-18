@@ -8,7 +8,14 @@
 #include <mutex>
 #include"Player.h"
 
-;
+string gname;
+int gTurn;
+int gId;
+int gClass;
+int gTeam;
+int gX;
+int gY;
+bool giveNewPlayer = false;
 sf::Sprite mapaSprite;
 sf::Texture mapaTexture;
 sf::Vector2f mapaPosition(0, 15);
@@ -135,7 +142,7 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 
 				if (command == "PLAYER")
 				{
-					std::cout << "PLAYER | NEW" << std::endl;
+					//std::cout << "PLAYER | NEW" << std::endl;
 
 					std::string aName;
 					int aTurn;
@@ -145,43 +152,49 @@ void thread_socket_selector(std::vector<std::string>* aMsjs, std::vector<int>* m
 					int aX;
 					int aY;
 
-					std::cout << "1" << std::endl;
+				//	std::cout << "1" << std::endl;
 					packet >> aName;
-					std::cout << aName << std::endl;
-					std::cout << "2" << std::endl;
+					//std::cout << aName << std::endl;
+					//std::cout << "2" << std::endl;
 					packet >> aTurn;
-					std::cout << aTurn << std::endl;
-					std::cout << "3" << std::endl;
+					//std::cout << aTurn << std::endl;
+				//	std::cout << "3" << std::endl;
 					packet >> aId;
-					std::cout << aId << std::endl;
-					std::cout << "4" << std::endl;
+					//std::cout << aId << std::endl;
+					//std::cout << "4" << std::endl;
 					packet >> aClass;
-					std::cout << aClass << std::endl;
-					std::cout << "5" << std::endl;
+					//std::cout << aClass << std::endl;
+					//std::cout << "5" << std::endl;
 					packet >> aTeam;
-					std::cout << aTeam << std::endl;
-					std::cout << "6" << std::endl;
+					//std::cout << aTeam << std::endl;
+					//std::cout << "6" << std::endl;
 					packet >> aX;
-					std::cout << aX << std::endl;
-					std::cout << "7" << std::endl;
+					//std::cout << aX << std::endl;
+					//std::cout << "7" << std::endl;
 					packet >> aY;
-					std::cout << aY << std::endl;
-					std::cout << "8" << std::endl;
+					//std::cout << aY << std::endl;
+					//std::cout << "MI" << std::endl;
 
-					newPlayer = Player(aName, aTurn, aId, aClass, aTeam, aX, aY);
-					//Player player1 = Player((string)"Albert", 1, 1, 4, 1, 200, 120);
+					gname = aName;
+					gTurn=aTurn;
+					//std::cout << "8" << std::endl;
+					gId= aId;
+					gClass= aClass;
+					gTeam= aTeam;
+					gX= aX;
+					gY= aY;
+					giveNewPlayer = true;
+					//std::cout << "9" << std::endl;
 
-					std::cout << "9" << std::endl;
+					
 
-					_aPlayers->push_back(newPlayer);
-
-					std::cout << "Jugador asignado" << std::endl;
+					//std::cout << "Jugador asignado" << std::endl;
 					//text = "El jugador " + newPlayer.name + " ha escogido la clase " + newPlayer.clase.name;
 					text = "TEST";
 				}
 				else
 				{
-					std::cout << "MESSAGE | NEW" << std::endl;
+					//std::cout << "MESSAGE | NEW" << std::endl;
 					packet >> text >> peerId;
 				}
 				
@@ -214,10 +227,11 @@ int main()
 {
 	Player myPlayer;
 	PlayerState myState = Waiting;
-
+	
 	std::vector<std::string> aMensajes;
 	std::vector<int> messageColor;
 
+	
 	sf::TcpSocket socket;
 	std::vector<sf::TcpSocket*> peersVector;
 	std::vector<Player> aPlayers;
@@ -229,6 +243,8 @@ int main()
 	int peers;
 
 	sf::Socket::Status status = socket.connect("localhost", 50000, sf::milliseconds(15.f));
+
+
 
 	if (status != sf::Socket::Done)
 	{
@@ -377,6 +393,8 @@ int main()
 				{
 					if (myState == CharacterCreation)
 					{
+
+					
 						std::string classNumber = "0";
 						std::string playerName = "0";
 
@@ -402,7 +420,6 @@ int main()
 
 						for (int i = 0; i < peersVector.size(); i++)
 							peersVector[i]->send(readyPacket);
-
 						myState = Ready;
 					}
 					else if (myState == Ready)
@@ -462,6 +479,22 @@ int main()
 			}
 		}
 		//separator
+		if (myState == Ready || myState == CharacterCreation) {
+			cout << aPlayers.size() << std::endl;
+			if (giveNewPlayer)
+			{
+				aPlayers.push_back(Player(gname, gTurn, gId, gClass, gTeam, gX, gY));
+				giveNewPlayer = false;
+			}
+			if (aPlayers.size() == 4) {
+				myState = Playing;
+			}
+			
+		}
+		if (myState == Playing) {
+			for (int n = 0; n < 2; n++)
+				cout << aPlayers[n].name << std::endl;
+		}
 		window.draw(separator);
 		window.draw(chatRect);
 
@@ -497,6 +530,12 @@ int main()
 		mapaSprite.setPosition(mapaPosition);
 		window.draw(mapaSprite);	
 
+		for (int n = 0; n < aPlayers.size(); n++) {
+			aPlayers[n].playerSprite.setTexture(aPlayers[n].playerTexture);
+			aPlayers[n].playerSprite.setScale(0.25f, 0.25f);
+			aPlayers[n].playerSprite.setPosition(aPlayers[n].position);
+			window.draw(aPlayers[n].playerSprite);
+		}
 		myPlayer.playerSprite.setTexture(myPlayer.playerTexture);
 		myPlayer.playerSprite.setScale(0.25f, 0.25f);
 		myPlayer.playerSprite.setPosition(myPlayer.position);
